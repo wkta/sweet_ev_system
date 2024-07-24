@@ -1,6 +1,6 @@
 from UMediator import UMediator
 from ServerComponent import ServerComponent
-from NetworkLayer2 import NetworkLayer2
+from netw_code import NetworkLayer2
 import time
 
 HOST = '127.0.0.1'

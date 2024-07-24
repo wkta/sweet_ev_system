@@ -4,7 +4,7 @@ import pygame
 
 import glvars
 from GameClientPlusGUI import GameClientPlusGUI
-from NetworkLayer import NetworkLayer
+from netw_code import NetworkLayer
 
 
 # from ext_mediators import ServerMediator
