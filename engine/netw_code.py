@@ -19,8 +19,9 @@ class NetworkLayer:
     def register_mediator(self, mediator):
         self._mediators.append(mediator)
 
-    def start_comms(self, given_socket_config):
-        host_info, port_info = given_socket_config
+    def start_comms(self, host_info, port_info):
+        given_socket_config = host_info, port_info
+
         if self._server_flag:
             so = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             so.bind(given_socket_config)
@@ -37,8 +38,7 @@ class NetworkLayer:
             receiver_thread = threading.Thread(target=self.cli_receives_updates, args=(s_obj, self._mediators))
             receiver_thread.start()
 
-    @property
-    def server_flag(self):
+    def get_server_flag(self):
         return self._server_flag
 
     # -----------------------------

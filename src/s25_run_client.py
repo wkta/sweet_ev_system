@@ -24,7 +24,7 @@ pygame.init()
 glvars.screen = pygame.display.set_mode(glvars.scr_size)
 # init network comms, create a model, and force sync it
 netlayer = NetworkLayer(0)
-netlayer.start_comms(('127.0.0.1', 60111))
+netlayer.start_comms('127.0.0.1', 60111)
 glvars.mediator = mediator = UMediator()
 
 mediator.set_network_layer(netlayer)

@@ -1,6 +1,5 @@
 import random
 from collections import deque
-from engine.structures import Singleton
 
 
 # @Singleton
@@ -72,6 +71,6 @@ class UMediator:
                 t = self._update_step()
 
     def handle_special_event(self, event_type, event):
-        suffix = " by server" if self.network_layer.server_flag else "by client"+self.ident
+        suffix = " by server" if self.network_layer.get_server_flag() else "by client"+self.ident
         print(f"Special event [{event_type}, {event}] forwarded"+suffix)
         self.network_layer.broadcast(event_type, event)
