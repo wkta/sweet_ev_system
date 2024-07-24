@@ -1,7 +1,10 @@
+import json
 import random
 
+from engine.helpers import EventReadyCls
 
-class Model:
+
+class Model(EventReadyCls):
     MAXSCORE = 2
 
     def _find_free_random_loc(self):
@@ -17,6 +20,15 @@ class Model:
         if x == 'p2':
             return 'p1'
         raise ValueError('not recognized x argument: '+str(x))
+
+    def move_pl(self, sym, ij_target):
+        y = super().move_pl(sym, ij_target)
+        self.pev('player_moves', json.dumps({'cell': ij_target, 'who': sym}))
+        if y:
+            actor_msg = '{"who":"p1"}' if sym == 'p1' else '{"who":"p2"}'
+            self.pev('player_scores', actor_msg)
+            if self.winner is not None:
+                self.pev('player_wins', actor_msg)
 
     def __init__(self):
         self.winner = 0  # when this isnt zero, therefore game is over

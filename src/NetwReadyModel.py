@@ -1,34 +1,40 @@
 import json
-import sys
 
-sys.path.append('..')
-from ModelWithEvents import ModelWithEvents
+from ChasersModel import ChasersModel
 
 
-class NetwReadyModel(ModelWithEvents):
-    def __init__(self, med, localplayer):
-        super().__init__(med)
+class NetwReadyModel(ChasersModel):
+    def __init__(self, localplayer):
+        super().__init__()
         self.localplayer = localplayer
 
     # GENERIC ++
-
     # def serialize(self):
     #    raise NotImplementedError
-
     # def load_state(self, given_serial):
     #    raise NotImplementedError
-
     def push_changes(self):
-        self.mediator.post('cross_push_changes', self.serialize())
+        self.pev('x_push_changes', self.serialize())
+
+    def force_sync(self):
+        self.pev('x_request_sync')
 
     # SPECIFIC ++
     def serialize(self):
         return json.dumps(
-            {'world':self.world, 'p1':self.score['p1'], 'p2':self.score['p2'], 'winner':self.winner}
+            {'world': self.world, 'p1': self.score['p1'], 'p2': self.score['p2'], 'winner': self.winner}
         )
 
     def load_state(self, given_serial):
-        dico_full = json.loads(given_serial)
+        try:
+            dico_full = json.loads(given_serial)
+        except json.JSONDecodeError as e:
+            print('******************************* deserialisation mal passée')
+            print('SERIAL:')
+            print(given_serial)
+            print()
+            print()
+            raise ValueError
 
         infos_st = dico_full['world']
         self.taken.clear()
@@ -43,11 +49,9 @@ class NetwReadyModel(ModelWithEvents):
         self.score['p2'] = dico_full['p2']
         self.winner = dico_full['winner']
 
-    # - would work if not authoritative server principle
-
+    def remote_move_pl(self, c, lig):
+        self.pev('x_request_movement', json.dumps([self.localplayer, c, lig]))
+    # - Would also work... IF NOT following the authoritative server principle
     # def move_pl(self, sym, ij_target):
     #     super().move_pl(sym, ij_target)
     #     self.push_changes()
-
-    def remote_move_pl(self, c, lig):
-        self.mediator.post('cross_move_player', json.dumps([self.localplayer, c, lig]))

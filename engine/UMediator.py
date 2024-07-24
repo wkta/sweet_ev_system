@@ -1,16 +1,19 @@
 import random
 from collections import deque
+from engine.structures import Singleton
 
 
+# @Singleton
 class UMediator:
-    def __init__(self, is_server: bool, networklayer):
+    def __init__(self):
         self.ident = self.gen_id()
         self.listeners = {}
         self.event_queue = deque()
-        self._server_flag = 0 if (not is_server) else 1
+        self.network_layer = None
 
-        self.network_layer = networklayer
-        networklayer.register_mediator(self)
+    def set_network_layer(self, ref):
+        self.network_layer = ref
+        ref.register_mediator(self)
 
     @staticmethod
     def gen_id():
@@ -31,34 +34,44 @@ class UMediator:
 
     @staticmethod
     def is_special_event(event_type):
-        return event_type.startswith('cross_')
+        return event_type.startswith('x_')
 
     def _basic_notify(self, event_type, event):
         if event_type in self.listeners:
             for listener_cb in self.listeners[event_type]:
                 listener_cb(event)
 
-    def post(self, event_type, event, enable_event_forwarding=True):
-        print(f'  postage event [{event_type}, {event}] sur Mediator:', self.ident)
+    def post(self, event_type, event: str, enable_event_forwarding: bool):
+        if event_type not in ('paint', 'update'):
+            print(f'  postage event [{event_type}, {event}] sur Mediator:', self.ident)
         self.event_queue.append((event_type, event, enable_event_forwarding))
 
-    def update(self) -> int:
+    def _update_step(self):
         y = cpt = len(self.event_queue)
+
         while cpt > 0:
             event_type, event, enable_event_forwarding = self.event_queue.popleft()
+            if event_type != 'paint':
+                print('-unpop event from queue:', event_type)
+
             if self.is_special_event(event_type) and enable_event_forwarding:
                 self.handle_special_event(event_type, event)
             else:
+                if event_type != 'paint':
+                    print('->basic notify')
                 self._basic_notify(event_type, event)
             cpt -= 1
         return y
 
-    def server_side_flag(self) -> int:
-        return self._server_flag
+    def update(self, save_cycles=False):
+        if save_cycles:
+            self._update_step()
+        else:
+            t = self._update_step()
+            while t != 0:
+                t = self._update_step()
 
     def handle_special_event(self, event_type, event):
-        suffix = " by server" if self._server_flag else "by client"+self.ident
+        suffix = " by server" if self.network_layer.server_flag else "by client"+self.ident
         print(f"Special event [{event_type}, {event}] forwarded"+suffix)
-
-        target_hint = self._server_flag ^ 1  # flip the flag
-        self.network_layer.broadcast(event_type, event, target_hint)
+        self.network_layer.broadcast(event_type, event)
