@@ -4,8 +4,22 @@ import random
 from engine.helpers import EventReadyCls
 
 
-class Model(EventReadyCls):
+class ChasersModel(EventReadyCls):
     MAXSCORE = 2
+
+    def __init__(self):
+        super().__init__()
+        self.winner = 0  # when this isnt zero, therefore game is over
+        self.taken = set()
+        self.world = [
+            ['.' for _ in range(4)] for _ in range(6)
+        ]
+        self.positions = dict()
+        for sym in ('p1', 'p2', 'ai'):
+            self._spawn(sym)
+        self.score = {
+            'p1': 0, 'p2': 0
+        }
 
     def _find_free_random_loc(self):
         r_loc = (random.randint(0, 5), random.randint(0, 3))
@@ -20,42 +34,6 @@ class Model(EventReadyCls):
         if x == 'p2':
             return 'p1'
         raise ValueError('not recognized x argument: '+str(x))
-
-    def move_pl(self, sym, ij_target):
-        y = super().move_pl(sym, ij_target)
-        self.pev('player_moves', json.dumps({'cell': ij_target, 'who': sym}))
-        if y:
-            actor_msg = '{"who":"p1"}' if sym == 'p1' else '{"who":"p2"}'
-            self.pev('player_scores', actor_msg)
-            if self.winner is not None:
-                self.pev('player_wins', actor_msg)
-
-    def __init__(self):
-        self.winner = 0  # when this isnt zero, therefore game is over
-        self.taken = set()
-        self.world = [
-            ['.' for _ in range(4)] for _ in range(6)
-        ]
-
-        self.positions = dict()
-        for sym in ('p1', 'p2', 'ai'):
-            self._spawn(sym)
-        self.score = {
-            'p1': 0, 'p2': 0
-        }
-        print('monde init. ok')
-
-    def display(self):
-        for ligne in range(4):
-            for col in range(6):
-                print(self.world[col][ligne].ljust(5), end='')
-            print()
-        x, y = self.score['p1'], self.score['p2']
-        print(f'score p1: {x}  |  score p2: {y} ', end='')
-        if self.winner != 0:
-            print('WINNER ->', self.winner)
-        else:
-            print()
 
     def move_pl(self, sym, ij_target):
         dmg = False
@@ -75,8 +53,28 @@ class Model(EventReadyCls):
         self.taken.add((ti, tj))
         if dmg:
             self._spawn('ai')
-            return True
-        return False
+            ret = True
+        else:
+            ret = False
+
+        self.pev('player_moves', json.dumps({'cell': ij_target, 'who': sym}))
+        if ret:
+            actor_msg = '{"who":"p1"}' if sym == 'p1' else '{"who":"p2"}'
+            self.pev('player_scores', actor_msg)
+            if self.winner is not None:
+                self.pev('player_wins', actor_msg)
+
+    def display(self):
+        for ligne in range(4):
+            for col in range(6):
+                print(self.world[col][ligne].ljust(5), end='')
+            print()
+        x, y = self.score['p1'], self.score['p2']
+        print(f'score p1: {x}  |  score p2: {y} ', end='')
+        if self.winner != 0:
+            print('WINNER ->', self.winner)
+        else:
+            print()
 
     def _spawn(self, sym):
         p = self._find_free_random_loc()
