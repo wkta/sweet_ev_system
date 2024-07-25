@@ -1,5 +1,4 @@
 import random
-from collections import deque
 
 
 # @Singleton
@@ -7,7 +6,7 @@ class UMediator:
     def __init__(self):
         self.ident = self.gen_id()
         self.listeners = {}
-        self.event_queue = deque()
+        self.event_queue = list()  # deque()
         self.network_layer = None
 
     def set_network_layer(self, ref):
@@ -49,7 +48,7 @@ class UMediator:
         y = cpt = len(self.event_queue)
 
         while cpt > 0:
-            event_type, event, enable_event_forwarding = self.event_queue.popleft()
+            event_type, event, enable_event_forwarding = self.event_queue.pop(0)  # .popleft()
             if event_type != 'paint':
                 print('-unpop event from queue:', event_type)
 

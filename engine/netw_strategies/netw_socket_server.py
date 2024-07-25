@@ -32,6 +32,17 @@ def get_server_flag():
     return 1
 
 
+def partie_reception(raw_txt):
+    print(f'reception:{raw_txt}')
+    # unpack event & transmit to mediators
+    parts = raw_txt.split('#')
+    evtype = parts[0]
+    content = json.loads(parts[1])
+    print('handle client fait le passage a un/des mediator(s) count:', len(mediators))
+    for m in mediators:
+        m.post(evtype, content, False)
+
+
 def start_comms(host_info, port_info):
     def handle_client(socklisten):
         global inbound_connections, mediators
@@ -46,15 +57,7 @@ def start_comms(host_info, port_info):
                     print('error receiving data')
                     break
                 txt_info = data.decode()
-                print(f'reception:{txt_info}')
-
-                # unpack event & transmit to mediators
-                parts = txt_info.split('#')
-                evtype = parts[0]
-                content = json.loads(parts[1])
-                print('handle client fait le passage a un/des mediator(s) count:', len(mediators))
-                for m in mediators:
-                    m.post(evtype, content, False)
+                partie_reception(txt_info)
 
     given_socket_config = host_info, port_info
     so = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -86,3 +89,7 @@ def broadcast(event_type, event_content):
 def register_mediator(x):
     global mediators
     mediators.append(x)
+
+
+def shutdown_comms():
+    pass  # TODO

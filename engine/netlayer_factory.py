@@ -19,7 +19,7 @@ __all__ = [
 netw_strat_table = {
     ('socket', 'client'): 'netw_socket_client',
     ('socket', 'server'): 'netw_socket_server',
-    # ('ws', 'client'): 'netw_ws_client',
+    ('ws', 'client'): 'netw_ws_client',
     # ('ws', 'server'): 'netw_ws_server',
 
     # ... Feel free to add more mappings as needed
@@ -57,12 +57,14 @@ def build(param1, param2) -> dict:
     f2 = getattr(module, 'start_comms')
     f3 = getattr(module, 'broadcast')
     f4 = getattr(module, 'register_mediator')
+    f5 = getattr(module, 'shutdown_comms')
 
     return {
         'get_server_flag': f1,
         'start_comms': f2,
         'broadcast': f3,
         'register_mediator': f4,
+        'shutdown_comms': f5
     }
 
 # -- just testing
