@@ -26,7 +26,7 @@ netw_strat_table = {
 }
 
 tmp = tuple(netw_strat_table.keys())
-prefx = 'netw_strategies.'
+prefx = 'engine.netw_strategies.'
 for k in tmp:
     netw_strat_table[k] = prefx+netw_strat_table[k]
 

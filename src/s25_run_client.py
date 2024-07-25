@@ -2,8 +2,8 @@ import sys
 import pygame
 import glvars
 from GameClientPlusGUI import GameClientPlusGUI
-from UMediator import UMediator
-from netw_code import NetworkLayer
+from engine.UMediator import UMediator
+# from netw_code import NetworkLayer
 from engine.netlayer_factory import build, Objectifier
 
 
