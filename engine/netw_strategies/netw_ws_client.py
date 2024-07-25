@@ -1,5 +1,7 @@
-import threading
 import json
+import threading
+import time
+
 import websocket
 
 
@@ -11,19 +13,26 @@ __all__ = [
 ]
 
 mediators = list()
-inbound_connections = list()
+# inbound_connections = list()
 ref_threads = list()
 
 # old?
-_client_socket = None
+ref_ws = None
 _receiver_thread = None
 
 # ----------- private stuff --------------
 def ws_on_message(ws, message):
-    ev_manager = EvManager.instance()
+    global mediators
     serial = message
     print(f'Received shared variable update: {serial}')
-    ev_manager.post(EngineEvTypes.NetwReceive, serial=serial)
+    evtype, content = serial.split('#')
+
+    print('ws on message [[[[ ', evtype)
+    print('ws on message <Content> ', content)
+    k = len(mediators)
+    print(f'passed to {k} mediators')
+    for m in mediators:
+        m.post(evtype, content, False)
 
 
 def ws_on_error(ws, error):
@@ -34,20 +43,20 @@ def ws_on_close(ws, close_status_code, close_msg):
     print("WebSocket connection closed")
 
 
-def ws_on_open(ws):
-    global client_socket
-    client_socket = ws
+def ws_on_open(ws_handle):
+    global ref_ws
+    ref_ws = ws_handle
     print("WebSocket connection opened")
 
 
 def _receive_updates(host_info, port_info):
+    global ref_ws
     websocket.enableTrace(True)
-    ws = websocket.WebSocketApp(
+    websocket.WebSocketApp(
         f'ws://{host_info}:{port_info}/',
         on_open=ws_on_open, on_message=ws_on_message, on_error=ws_on_error,
         on_close=ws_on_close
-    )
-    ws.run_forever()
+    ).run_forever()
 
 
 def get_server_flag():
@@ -66,18 +75,23 @@ def partie_reception(raw_txt):
 
 
 def start_comms(host_info, port_info):
-    global _receiver_thread
+    global _receiver_thread, ref_ws
     _receiver_thread = threading.Thread(target=_receive_updates, args=(host_info, port_info))
     _receiver_thread.start()
 
+    # because we wish to keep a sync program(not async)
+    # we force the wait. this is effectively like typing 'await' in JS
+    while ref_ws is None:
+        time.sleep(0.1)
+
 
 def broadcast(event_type, event_content):
-    global inbound_connections
+    global ref_ws
     # emit to clientS
+    if event_content is None:
+        event_content = 'null'
     richmsg = f'{event_type}#{event_content}'
-    global _client_socket
-    if _client_socket:
-        _client_socket.send(richmsg.encode())
+    ref_ws.send(richmsg.encode())
 
 
 def register_mediator(x):

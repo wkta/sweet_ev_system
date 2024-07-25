@@ -4,7 +4,11 @@ import glvars
 from GameClientPlusGUI import GameClientPlusGUI
 from UMediator import UMediator
 from netw_code import NetworkLayer
+from engine.netlayer_factory import build, Objectifier
 
+
+GS_PORT = 8080
+GS_HOST = 'localhost'
 
 if sys.argv[1] == 'p1':
     local_pl, remote_pl = 'p1', 'p2'
@@ -23,8 +27,10 @@ USER_COMMANDS = {
 pygame.init()
 glvars.screen = pygame.display.set_mode(glvars.scr_size)
 # init network comms, create a model, and force sync it
-netlayer = NetworkLayer(0)
-netlayer.start_comms('127.0.0.1', 60111)
+# netlayer = NetworkLayer(0)
+netlayer = Objectifier(**build('ws', 'client'))
+
+netlayer.start_comms(GS_HOST, GS_PORT)
 glvars.mediator = mediator = UMediator()
 
 mediator.set_network_layer(netlayer)
